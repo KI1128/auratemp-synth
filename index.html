@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AuraTemp - Weather Generative Ambient Synthesizer</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Fullscreen Atmosphere Canvas -->
+  <canvas id="visualizer-canvas"></canvas>
+
+  <!-- Surface Minimal HUD -->
+  <div class="hud-layer interactive" id="hud-layer">
+    <!-- Top Row -->
+    <div class="top-bar">
+      <div class="app-brand">
+        <div class="live-dot" id="live-dot"></div>
+        <span>AuraTemp Synth</span>
+      </div>
+      <div class="top-actions">
+        <button class="icon-btn" id="btn-fullscreen" title="Full Screen">
+          <svg viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+        </button>
+        <button class="icon-btn" id="btn-open-settings" title="Studio Settings & Modulators">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Bottom Capsule (Minimal Surface: Play/Pause, Climate, DI Only) -->
+    <div class="bottom-bar">
+      <div class="ambient-capsule">
+        <button class="play-btn" id="btn-play-pause" title="Play/Pause">
+          <svg id="play-icon" viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"></polygon></svg>
+        </button>
+        <div class="capsule-meta">
+          <div class="capsule-chunk">
+            <span class="capsule-label">Climate</span>
+            <span class="capsule-value" id="hud-temp-hum">24.0°C / 50%</span>
+          </div>
+          <div class="capsule-divider"></div>
+          <div class="capsule-chunk">
+            <span class="capsule-label">Discomfort Index</span>
+            <div class="di-badge" id="hud-di-badge">
+              <span id="hud-di-val">DI 70.8</span>
+              <span id="hud-di-tier">快適</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Studio Settings Drawer (Modal) -->
+  <div class="drawer-overlay" id="drawer-overlay">
+    <div class="studio-drawer">
+      <div class="drawer-header">
+        <div class="drawer-title">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20v-6M6 20V10M18 20V4"/></svg>
+          <span>Studio Console</span>
+        </div>
+        <button class="close-btn" id="btn-close-settings">✕</button>
+      </div>
+
+      <!-- Climate Source Section -->
+      <div class="section-block">
+        <span class="section-label">Meteorological Telemetry</span>
+        <div class="card-box">
+          <div class="row-split">
+            <div class="switch-label">
+              <span>Automatic Location Sync</span>
+              <span class="switch-desc">Open-Meteo WMO API (No API key required)</span>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="sync-geo-toggle">
+              <span class="slider-toggle"></span>
+            </label>
+          </div>
+          <div class="slider-group">
+            <div class="slider-info">
+              <span>Temperature</span>
+              <span id="label-val-temp">24.0 °C</span>
+            </div>
+            <input type="range" min="-10" max="45" step="0.5" value="24.0" class="styled-range" id="slider-temp">
+          </div>
+          <div class="slider-group">
+            <div class="slider-info">
+              <span>Relative Humidity</span>
+              <span id="label-val-hum">50 %</span>
+            </div>
+            <input type="range" min="5" max="100" step="1" value="50" class="styled-range" id="slider-hum">
+          </div>
+        </div>
+      </div>
+
+      <!-- Long-Play Micro-Variation & Chord Monitor -->
+      <div class="section-block">
+        <span class="section-label">Harmonic Progression Engine</span>
+        <div class="card-box">
+          <div class="lp-row">
+            <span>Cycle Variation (Shift every 5 min)</span>
+            <div class="variation-chips">
+              <button class="v-chip active" data-v="0">Var A</button>
+              <button class="v-chip" data-v="1">Var B</button>
+              <button class="v-chip" data-v="2">Var C</button>
+            </div>
+          </div>
+          <div class="lp-row">
+            <span>Current Dwell Chord</span>
+            <span class="chord-pill-console" id="console-chord">Cmaj7 (9)</span>
+          </div>
+          <div class="progress-bar-wrap">
+            <div class="progress-bar-fill" id="lp-progress-bar"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chord Progression Editor -->
+      <div class="section-block">
+        <div class="row-split">
+          <span class="section-label">Progression Editor</span>
+          <button class="text-action-btn" id="btn-reset-chords">Reset Defaults</button>
+        </div>
+        <div class="card-box">
+          <div class="editor-selectors">
+            <div class="editor-select-group">
+              <label>Target DI Tier</label>
+              <select id="edit-tier-select" class="styled-select"></select>
+            </div>
+            <div class="editor-select-group">
+              <label>Variation Slot</label>
+              <select id="edit-var-select" class="styled-select">
+                <option value="0">Variation A</option>
+                <option value="1">Variation B</option>
+                <option value="2">Variation C</option>
+              </select>
+            </div>
+          </div>
+          <div class="chord-steps-grid" id="chord-steps-container">
+            <!-- 4 chord inputs populated by JS -->
+          </div>
+          <button class="apply-btn" id="btn-apply-chords">Apply Progression</button>
+        </div>
+      </div>
+
+      <!-- 8-Channel Mixer Console -->
+      <div class="section-block">
+        <span class="section-label">8-Channel Master Console</span>
+        <div class="mixer-grid" id="mixer-container"></div>
+      </div>
+
+      <!-- Master Bus Controls -->
+      <div class="section-block">
+        <span class="section-label">Master Bus Filters</span>
+        <div class="card-box">
+          <div class="slider-group">
+            <div class="slider-info">
+              <span>Master Low-Pass Filter</span>
+              <span id="label-val-lpf">14000 Hz</span>
+            </div>
+            <input type="range" min="800" max="18000" step="100" value="14000" class="styled-range" id="slider-master-lpf">
+          </div>
+          <div class="slider-group">
+            <div class="slider-info">
+              <span>Master Gain</span>
+              <span id="label-val-gain">85 %</span>
+            </div>
+            <input type="range" min="0" max="100" step="1" value="85" class="styled-range" id="slider-master-gain">
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
